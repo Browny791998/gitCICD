@@ -1,4 +1,4 @@
-name: First WorkFlow
+name: Test WorkFlow
 on: workflow_dispatch
 jobs:
   first-job:
