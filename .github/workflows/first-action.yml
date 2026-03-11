@@ -1,5 +1,9 @@
-name: Test WorkFlow
-on: push
+name: Events Test
+on:
+  pull_request:
+    types:
+      - opened
+  workflow_dispatch:
 jobs:
   first-job:
      runs-on: ubuntu-latest
