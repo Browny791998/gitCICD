@@ -1,0 +1,29 @@
+name: React CI Build
+
+on:
+  push:
+    branches:
+      - feature/action
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ၁။ Repository ထဲရှိ Code များကို စက်ထဲသို့ ဆွဲယူခြင်း
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # ၂။ Node.js Environment ကို Setup လုပ်ခြင်း
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # ၃။ Dependencies များကို Install လုပ်ခြင်း
+      - name: Install dependencies
+        run: npm ci
+
+      # ၄။ React Project ကို Build လုပ်ခြင်း
+      - name: Build project
+        run: npm run build
