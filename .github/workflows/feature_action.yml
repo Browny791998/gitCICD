@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: feature/action
 
 jobs:
   # ၁။ Build လုပ်ပြီး Artifact တင်မည့် Job
