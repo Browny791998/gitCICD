@@ -1,6 +1,5 @@
 name: React CI Build
 
-# Workflow run တွင် ကိုယ်ပိုင်အမည်နှင့် Trigger လုပ်သူ၏ အမည် (actor) ပေါ်လာစေရန် run-name ထည့်သွင်းခြင်း
 run-name: Pipeline run by @${{ github.actor }} (#${{ github.run_number }})
 
 on:
@@ -28,6 +27,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ၄။ React Project ကို Build လုပ်ခြင်း
+      # ၄။ Repository Variable ကို အသုံးပြု၍ Environment ကို စစ်ဆေးခြင်း
+      - name: Check Environment Variable
+        run: echo "Running build for environment -> ${{ vars.APP_ENV }}"
+
+      # ၅။ React Project ကို Build လုပ်ခြင်း
       - name: Build project
         run: npm run build
+
+      # ၆။ Secret ကို အသုံးပြု၍ Deploy (သို့မဟုတ်) API ချိတ်ဆက်ခြင်း သဥ္ဇာာ
+      - name: Deploy or Connect via API Token
+        run: |
+          echo "Using API Token securely..."
+          # ဥပမာအနေဖြင့် API_TOKEN ကို command ထဲတွင် လုံခြုံစွာ ခေါ်သုံးပုံ
+          # (Log ထဲတွင် ပေါ်လာမည်မဟုတ်ဘဲ Mask လုပ်ပေးသွားပါမည်)
+          echo "Token length is active."
+        env:
+          MY_API_TOKEN: ${{ secrets.API_TOKEN }}
