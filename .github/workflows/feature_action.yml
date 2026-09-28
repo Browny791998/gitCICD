@@ -1,46 +1,48 @@
-name: React CI Build
-
-run-name: Pipeline run by @${{ github.actor }} (#${{ github.run_number }})
+name: Build and Deploy
 
 on:
   push:
-    branches:
-      - feature/action
-  workflow_dispatch:
+    branches: [ "dev" ]
 
 jobs:
+  # ၁။ Build လုပ်ပြီး Artifact တင်မည့် Job
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # ၁။ Repository ထဲရှိ Code များကို စက်ထဲသို့ ဆွဲယူခြင်း
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # ၂။ Node.js Environment ကို Setup လုပ်ခြင်း
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      # ၃။ Dependencies များကို Install လုပ်ခြင်း
-      - name: Install dependencies
-        run: npm ci
-
-      # ၄။ Repository Variable ကို အသုံးပြု၍ Environment ကို စစ်ဆေးခြင်း
-      - name: Check Environment Variable
-        run: echo "Running build for environment -> ${{ vars.APP_ENV }}"
-
-      # ၅။ React Project ကို Build လုပ်ခြင်း
-      - name: Build project
-        run: npm run build
-
-      # ၆။ Secret ကို အသုံးပြု၍ Deploy (သို့မဟုတ်) API ချိတ်ဆက်ခြင်း သဥ္ဇာာ
-      - name: Deploy or Connect via API Token
+      # Code ကို Build လုပ်သည်ဟု ယူဆပါ (ဥပမာ- Jar ဖိုင်ထုတ်ခြင်း)
+      - name: Build Project
         run: |
-          echo "Using API Token securely..."
-          # ဥပမာအနေဖြင့် API_TOKEN ကို command ထဲတွင် လုံခြုံစွာ ခေါ်သုံးပုံ
-          # (Log ထဲတွင် ပေါ်လာမည်မဟုတ်ဘဲ Mask လုပ်ပေးသွားပါမည်)
-          echo "Token length is active."
-        env:
-          MY_API_TOKEN: ${{ secrets.API_TOKEN }}
+          mkdir -p build/libs
+          echo "dummy content" > build/libs/greetings-deploy.jar
+
+      # Build ထွက်လာသော ဖိုင်ကို Artifact အနေဖြင့် တင်ခြင်း
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: archive.zip
+          path: build/libs/greetings-deploy.jar
+
+  # ၂။ Artifact ကို ပြန်လည် Download ဆွဲယူပြီး Deploy လုပ်မည့် Job
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      # မူလ Job တင်ခဲ့သော Artifact ဖိုင်များကို ပြန်လည် Download ဆွဲယူခြင်း
+      - name: Download candidate artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: archive.zip
+
+      # Download ဆွဲထားသော ဖိုင်ကို အသုံးပြု၍ Release တင်ခြင်း (စာမျက်နှာပေါ်ပါ ဥပမာအတိုင်း)
+      - name: release to dev
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          tag_name: v${{ vars.DEV_VERSION }}
+          token: ${{ secrets.DEV_TOKEN }}
+          prerelease: true
+          draft: true
+          name: dev
+          files: greetings-deploy.jar
