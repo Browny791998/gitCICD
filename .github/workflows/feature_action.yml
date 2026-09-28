@@ -1,10 +1,14 @@
 name: React CI Build
 
+# Workflow run တွင် ကိုယ်ပိုင်အမည်နှင့် Trigger လုပ်သူ၏ အမည် (actor) ပေါ်လာစေရန် run-name ထည့်သွင်းခြင်း
+run-name: Pipeline run by @${{ github.actor }} (#${{ github.run_number }})
+
 on:
   push:
     branches:
       - feature/action
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
