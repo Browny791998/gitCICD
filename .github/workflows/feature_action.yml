@@ -1,44 +1,31 @@
-name: Create Issue on Failure
+name: Capturing Action Output Example
 
-# ၁။ Inputs များကို လက်ခံရန် Triggers များကို သတ်မှတ်ခြင်း
+# ၁။ feature/action branch သို့ push လုပ်မှသာ အလုပ်လုပ်ရန် Trigger သတ်မှတ်ခြင်း
 on:
-  workflow_dispatch:
-    inputs:
-      title:
-        description: 'Issue title'
-        required: true
-        type: string
-      body:
-        description: 'Issue body'
-        required: true
-        type: string
+  push:
+    branches:
+      - feature/action
 
-  workflow_call:
-    inputs:
-      title:
-        required: true
-        type: string
-      body:
-        required: true
-        type: string
-
-# ၂။ Job နှင့် Step များအတွင်း Inputs ကို ခေါ်သုံးခြင်း
 jobs:
-  create_issue:
+  build-and-release:
     runs-on: ubuntu-latest
     
-    permissions:
-      issues: write
+    outputs:
+      # Step တစ်ခုအတွင်းမှ ရလာသည့် Output ကို Job Output အဖြစ်သို့ Mapping လုပ်ခြင်း
+      version-tag: ${{ steps.changelog.outputs.version }}
 
     steps:
-      - name: Create issue using REST API
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ၂။ Third-party Action တစ်ခုကို အသုံးပြုပြီး Output ကို ဖမ်းယူခြင်း
+      - name: Conventional Changelog Action
+        id: changelog   # အခြား Step တွေက ခေါ်သုံးရန် ID ပေးထားခြင်း
+        uses: TriPSs/conventional-changelog-action@v3.14.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ၃။ ယခင် Step က ထွက်လာသော Output တန်ဖိုးကို ဤ Step တွင် ပြန်လည်အသုံးပြုခြင်း
+      - name: Print Version Output
         run: |
-          curl --request POST \
-            --url https://api.github.com/repos/${{ github.repository }}/issues \
-            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            --header 'content-type: application/json' \
-            --data '{
-              "title": "Failure: ${{ inputs.title }}",
-              "body": "Details: ${{ inputs.body }}"
-            }' \
-            --fail
+          echo "The generated version is: ${{ steps.changelog.outputs.version }}"
