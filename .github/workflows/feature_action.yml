@@ -1,48 +1,42 @@
-name: Build and Deploy
+name: Create Issue on Failure
 
+# ၁။ Inputs များကို လက်ခံရန် Triggers များကို သတ်မှတ်ခြင်း
 on:
-  push:
-    branches: feature/action
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Issue title'
+        required: true
+        type: string
+      body:
+        description: 'Issue body'
+        required: true
+        type: string
 
+  workflow_call:
+    inputs:
+      title:
+        required: true
+        type: string
+      body:
+        required: true
+        type: string
+
+# ၂။ Job နှင့် Step များအတွင်း Inputs ကို ခေါ်သုံးခြင်း
 jobs:
-  # ၁။ Build လုပ်ပြီး Artifact တင်မည့် Job
-  build:
+  create_issue:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    
+    permissions:
+      issues: write
 
-      # Code ကို Build လုပ်သည်ဟု ယူဆပါ (ဥပမာ- Jar ဖိုင်ထုတ်ခြင်း)
-      - name: Build Project
+    steps:
+      - name: Create issue using REST API
         run: |
-          mkdir -p build/libs
-          echo "dummy content" > build/libs/greetings-deploy.jar
-
-      # Build ထွက်လာသော ဖိုင်ကို Artifact အနေဖြင့် တင်ခြင်း
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: archive.zip
-          path: build/libs/greetings-deploy.jar
-
-  # ၂။ Artifact ကို ပြန်လည် Download ဆွဲယူပြီး Deploy လုပ်မည့် Job
-  deploy-dev:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      # မူလ Job တင်ခဲ့သော Artifact ဖိုင်များကို ပြန်လည် Download ဆွဲယူခြင်း
-      - name: Download candidate artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: archive.zip
-
-      # Download ဆွဲထားသော ဖိုင်ကို အသုံးပြု၍ Release တင်ခြင်း (စာမျက်နှာပေါ်ပါ ဥပမာအတိုင်း)
-      - name: release to dev
-        uses: softprops/action-gh-release@v0.1.15
-        with:
-          tag_name: v${{ vars.DEV_VERSION }}
-          token: ${{ secrets.DEV_TOKEN }}
-          prerelease: true
-          draft: true
-          name: dev
-          files: greetings-deploy.jar
+          curl --request POST \
+            --url https://api.github.com/repos/${{ github.repository }}/issues \
+            --data '{
+              "title": "Failure: ${{ inputs.title }}",
+              "body": "Details: ${{ inputs.body }}"
+            }' \
+            --fail
