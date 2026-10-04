@@ -1,0 +1,29 @@
+name: Concurrency Test Workflow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Actions Tab မှ Manual ရိုက်နှိပ် စမ်းသပ်နိုင်ရန်
+
+# Concurrency သတ်မှတ်ချက် အပိုင်း
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true # အသစ် ရောက်လာပါက လက်ရှိ Run နေဆဲ Job ကို ချက်ချင်း ရပ်တန့် (Cancel) မည်
+
+jobs:
+  long-running-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Step 1 - Start
+        run: echo "Job စတင်ပါပြီ..."
+
+      # စမ်းသပ်မှု ထင်ရှားစေရန် စက္ကန့် ၆၀ (၁ မိနစ်) ကြာ အိပ်ခိုင်း (Wait) ထားခြင်း
+      - name: Step 2 - Simulate Long Process
+        run: |
+          echo "အလုပ် လုပ်ဆောင်နေပါသည်။ စက္ကန့် ၆၀ စောင့်ပါ..."
+          sleep 60
+
+      - name: Step 3 - Finish
+        run: echo "Job အောင်မြင်စွာ ပြီးဆုံးသွားပါပြီ!"
