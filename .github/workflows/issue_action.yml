@@ -1,0 +1,47 @@
+name: Issue Notification & CI Workflow
+
+on:
+  # Trigger when issues are opened, edited, or closed
+  issues:
+    types: [opened, edited, closed]
+
+  # Trigger when pushing code to specific branches
+  push:
+    branches:
+      - main
+      - 'rel/v*'
+
+jobs:
+  # Job 1: Handle Issue Automation
+  handle-issues:
+    # Only run this job if the triggering event is an issue event
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Event Action
+        run: |
+          echo "Issue Action: ${{ github.event.action }}"
+          echo "Issue Title: ${{ github.event.issue.title }}"
+          echo "Issue URL: ${{ github.event.issue.html_url }}"
+
+      - name: Respond to Newly Opened Issue
+        if: github.event.action == 'opened'
+        run: echo "A new issue has been created! Sending welcome comment or notification..."
+
+      - name: Respond to Closed Issue
+        if: github.event.action == 'closed'
+        run: echo "An issue was closed."
+
+  # Job 2: CI Pipeline for Code Pushes
+  build-and-test:
+    # Only run this job if the triggering event is a push
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Build
+        run: echo "Building application for push event..."
