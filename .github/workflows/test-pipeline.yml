@@ -1,0 +1,23 @@
+name: Test Pipeline with Failure Handling
+
+on:
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+
+jobs:
+  # Job 1: A job designed to fail intentionally
+  failing-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate Failure
+        run: |
+          echo "Simulating a build/test failure..."
+          exit 1 # Forces the job to fail
+
+  # Job 2: Calls the reusable issue creator IF Job 1 fails
+  handle-failure:
+    needs: failing-job
+    if: always() && failure() # Runs only when 'failing-job' fails
+    uses: ./.github/workflows/create-failure-issue.yml
+    with:
+      title: "Automated failure report for commit ${{ github.sha }}"
+      body: "The workflow **${{ github.workflow }}** encountered a failure on commit `${{ github.sha }}`."
